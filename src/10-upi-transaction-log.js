@@ -48,4 +48,67 @@
  */
 export function analyzeUPITransactions(transactions) {
   // Your code here
+  if (!Array.isArray(transactions) || transactions.length === 0) return null;
+
+  const valid = transactions.filter(
+    t =>
+      t &&
+      typeof t.amount === "number" &&
+      t.amount > 0 &&
+      (t.type === "credit" || t.type === "debit")
+  );
+
+  if (valid.length === 0) return null;
+
+  const totalCredit = valid
+    .filter(t => t.type === "credit")
+    .reduce((s, t) => s + t.amount, 0);
+
+  const totalDebit = valid
+    .filter(t => t.type === "debit")
+    .reduce((s, t) => s + t.amount, 0);
+
+  const netBalance = totalCredit - totalDebit;
+
+  const transactionCount = valid.length;
+
+  const sumAll = valid.reduce((s, t) => s + t.amount, 0);
+  const avgTransaction = Math.round(sumAll / transactionCount);
+
+  const highestTransaction = valid.reduce((max, t) =>
+    t.amount > max.amount ? t : max
+  );
+
+  const categoryBreakdown = valid.reduce((obj, t) => {
+    obj[t.category] = (obj[t.category] || 0) + t.amount;
+    return obj;
+  }, {});
+
+  const freqMap = {};
+  let frequentContact = "";
+  let maxCount = 0;
+
+  for (const t of valid) {
+    freqMap[t.to] = (freqMap[t.to] || 0) + 1;
+    if (freqMap[t.to] > maxCount) {
+      maxCount = freqMap[t.to];
+      frequentContact = t.to;
+    }
+  }
+
+  const allAbove100 = valid.every(t => t.amount > 100);
+  const hasLargeTransaction = valid.some(t => t.amount >= 5000);
+
+  return {
+    totalCredit,
+    totalDebit,
+    netBalance,
+    transactionCount,
+    avgTransaction,
+    highestTransaction,
+    categoryBreakdown,
+    frequentContact,
+    allAbove100,
+    hasLargeTransaction
+  };
 }
